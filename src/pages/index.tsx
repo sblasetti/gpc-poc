@@ -4,9 +4,11 @@ import {
   Button,
   HStack,
   Input,
+  Select,
   Tag,
   TagCloseButton,
   TagLabel,
+  Textarea,
   VStack,
 } from "@chakra-ui/react";
 import { ChangeEvent, KeyboardEvent, MouseEvent, useState } from "react";
@@ -16,26 +18,50 @@ interface Ingredient {
   name: string;
 }
 
+const knownIngredients = [
+  "tomato",
+  "potatp",
+  "garlic",
+  "onion",
+  "chicken",
+  "pork",
+  "fish",
+  "beef",
+];
+
 export default function Home() {
   const [ingredient, setIngredient] = useState<string>("");
   const [ingredientsList, setIngredientsList] = useState<Ingredient[]>([]);
+  const [proposedIngredientsList, setProposedIngredientsList] = useState<
+    string[]
+  >([]);
 
-  const handleNewIngredientChange = (event: ChangeEvent<HTMLInputElement>) =>
-    setIngredient(event.target.value);
+  const handleNewIngredientChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const ingredientName = event.target.value;
+    setIngredient(ingredientName);
+
+    let matchingIngredients: string[] = [];
+    if (ingredientName) {
+      const sanitizedIngredientName = ingredientName.trim().toLocaleLowerCase();
+      matchingIngredients = knownIngredients.filter((ki) =>
+        ki.includes(sanitizedIngredientName)
+      );
+    }
+    setProposedIngredientsList(matchingIngredients);
+  };
 
   const handleNewIngredientKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-      addIngredient();
+      addIngredient(ingredient);
     }
   };
 
-  const addIngredient = () => {
+  const addIngredientToList = (name: string) => {
     const newIngredient: Ingredient = {
       id: Date.now().toString(),
-      name: ingredient,
+      name: name,
     };
     setIngredientsList((list) => [...list, newIngredient]);
-    setIngredient("");
   };
 
   const handleIngredientRemoveClick = (ingredientId: string) => {
@@ -47,6 +73,20 @@ export default function Home() {
       ...ingredientsList.slice(ingredientIndex + 1),
     ];
     setIngredientsList(newIngredientsList);
+  };
+
+  const handleNewIngredientClick = () => {
+    addIngredient(ingredient);
+  };
+
+  const handleProposedIngredientClick = (ingredientName: string) => {
+    addIngredientToList(ingredientName);
+  };
+
+  const addIngredient = (name: string) => {
+    addIngredientToList(name);
+    setIngredient("");
+    setProposedIngredientsList([]);
   };
 
   return (
@@ -73,11 +113,24 @@ export default function Home() {
             <Input
               placeholder="Type an ingredient..."
               value={ingredient}
+              type="search"
               onChange={handleNewIngredientChange}
               onKeyUp={handleNewIngredientKeyUp}
             />
-            <Button onClick={addIngredient}>Add</Button>
+            <Button onClick={handleNewIngredientClick}>Add</Button>
           </HStack>
+          <Box>
+            {proposedIngredientsList.map((tag) => (
+              <Tag
+                key={tag}
+                cursor="pointer"
+                margin={"2px"}
+                onClick={() => handleProposedIngredientClick(tag)}
+              >
+                {tag}
+              </Tag>
+            ))}
+          </Box>
         </VStack>
       </main>
     </>
