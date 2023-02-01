@@ -1,26 +1,10 @@
 import Head from "next/head";
-import {
-  Box,
-  Button,
-  HStack,
-  Input,
-  Select,
-  Tag,
-  TagCloseButton,
-  TagLabel,
-  Textarea,
-  VStack,
-} from "@chakra-ui/react";
-import { ChangeEvent, KeyboardEvent, MouseEvent, useState } from "react";
-
-interface Ingredient {
-  id: string;
-  name: string;
-}
+import AutocompleteList from "@/components/autocomplete-list/autocomplete-list.component";
+import { useState } from "react";
 
 const knownIngredients = [
   "tomato",
-  "potatp",
+  "potato",
   "garlic",
   "onion",
   "chicken",
@@ -30,64 +14,9 @@ const knownIngredients = [
 ];
 
 export default function Home() {
-  const [ingredient, setIngredient] = useState<string>("");
-  const [ingredientsList, setIngredientsList] = useState<Ingredient[]>([]);
-  const [proposedIngredientsList, setProposedIngredientsList] = useState<
-    string[]
-  >([]);
+  const [ingredients, setIngredients] = useState<string[]>([]);
 
-  const handleNewIngredientChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const ingredientName = event.target.value;
-    setIngredient(ingredientName);
-
-    let matchingIngredients: string[] = [];
-    if (ingredientName) {
-      const sanitizedIngredientName = ingredientName.trim().toLocaleLowerCase();
-      matchingIngredients = knownIngredients.filter((ki) =>
-        ki.includes(sanitizedIngredientName)
-      );
-    }
-    setProposedIngredientsList(matchingIngredients);
-  };
-
-  const handleNewIngredientKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      addIngredient(ingredient);
-    }
-  };
-
-  const addIngredientToList = (name: string) => {
-    const newIngredient: Ingredient = {
-      id: Date.now().toString(),
-      name: name,
-    };
-    setIngredientsList((list) => [...list, newIngredient]);
-  };
-
-  const handleIngredientRemoveClick = (ingredientId: string) => {
-    const ingredientIndex = ingredientsList.findIndex(
-      (value) => value.id === ingredientId
-    );
-    const newIngredientsList = [
-      ...ingredientsList.slice(0, ingredientIndex),
-      ...ingredientsList.slice(ingredientIndex + 1),
-    ];
-    setIngredientsList(newIngredientsList);
-  };
-
-  const handleNewIngredientClick = () => {
-    addIngredient(ingredient);
-  };
-
-  const handleProposedIngredientClick = (ingredientName: string) => {
-    addIngredientToList(ingredientName);
-  };
-
-  const addIngredient = (name: string) => {
-    addIngredientToList(name);
-    setIngredient("");
-    setProposedIngredientsList([]);
-  };
+  const handleIngredientsChange = (items: string[]) => setIngredients(items);
 
   return (
     <>
@@ -98,40 +27,16 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <VStack>
-          <Box flexWrap={"wrap"}>
-            {ingredientsList.map((ingredient) => (
-              <Tag key={ingredient.id} margin={"2px"}>
-                <TagLabel>{ingredient.name}</TagLabel>
-                <TagCloseButton
-                  onClick={() => handleIngredientRemoveClick(ingredient.id)}
-                />
-              </Tag>
-            ))}
-          </Box>
-          <HStack>
-            <Input
-              placeholder="Type an ingredient..."
-              value={ingredient}
-              type="search"
-              onChange={handleNewIngredientChange}
-              onKeyUp={handleNewIngredientKeyUp}
-            />
-            <Button onClick={handleNewIngredientClick}>Add</Button>
-          </HStack>
-          <Box>
-            {proposedIngredientsList.map((tag) => (
-              <Tag
-                key={tag}
-                cursor="pointer"
-                margin={"2px"}
-                onClick={() => handleProposedIngredientClick(tag)}
-              >
-                {tag}
-              </Tag>
-            ))}
-          </Box>
-        </VStack>
+        <AutocompleteList
+          placeholder="Type an ingredient..."
+          knownItemNames={knownIngredients}
+          onSelectedItemsChange={handleIngredientsChange}
+        />
+        <ul>
+          {ingredients.map((i) => (
+            <li key={i}>{i}</li>
+          ))}
+        </ul>
       </main>
     </>
   );
